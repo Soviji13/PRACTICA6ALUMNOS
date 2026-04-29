@@ -2,9 +2,13 @@ name: CI Hospital Management
 
 on: [push, pull_request]
 
+# Variable para silenciar el aviso amarillo de Node.js 20
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 permissions:
-  contents: write  # Para subir el badge dinámico de Jacoco
-  checks: write    # Para que el reporte de tests funcione
+  contents: write  
+  checks: write    
   pull-requests: write
 
 jobs:
@@ -29,20 +33,20 @@ jobs:
         run: ./mvnw compile --no-transfer-progress
 
       - name: Ejecutar Tests e Informe Jacoco
-        # Ejecutamos verify para los tests de integración y generamos el reporte
         run: ./mvnw verify jacoco:report --no-transfer-progress --batch-mode
 
       - name: Generar Informe de Resultados (Reporter)
-        if: always() # Se ejecuta siempre para ver qué falló
+        if: always() 
         uses: dorny/test-reporter@v1
         with:
           name: Informe de Pruebas de Integracion
-          path: 'target/failsafe-reports/*.xml'
+          # EL TRUCO ESTÁ AQUÍ: Filtramos para ignorar el failsafe-summary.xml
+          path: 'target/failsafe-reports/TEST-*.xml'
           reporter: java-junit
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Generar Badge de Cobertura (Jacoco)
-        if: github.event_name != 'pull_request'
+        if: always() && github.event_name != 'pull_request'
+        id: jacoco
         uses: cicirello/jacoco-badge-generator@v2
         with:
           generate-branches-badge: true
@@ -50,7 +54,7 @@ jobs:
           badges-directory: .github/badges
 
       - name: Commit y Push del badge dinamico
-        if: github.event_name != 'pull_request'
+        if: always() && github.event_name != 'pull_request'
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
