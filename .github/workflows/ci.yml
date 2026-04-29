@@ -34,7 +34,7 @@ jobs:
 
       - name: Generar Informe de Resultados (Reporter)
         if: always() # Se ejecuta aunque fallen los tests para dar feedback rápido 
-        uses: dorny/test-reporter@v1  "GitHub-test-reporter" oficial
+        uses: dorny/test-reporter@v1
         with:
           name: Informe de Pruebas de Integracion
           path: target/failsafe-reports/*.xml
