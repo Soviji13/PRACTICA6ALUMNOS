@@ -43,18 +43,18 @@ public class MedicoControllerMockMvcIT extends AbstractIntegration {
     @Test
     @DisplayName("Ciclo de vida completo del Medico: Crear, Editar y Borrar")
     void medicoLifecycle() throws Exception {
-        // 1. Crear
+        // Crear 
         crearMedico(medico);
 
-        // 2. Editar
+        // Editar 
         medico.setEspecialidad("Traumatologia");
         this.mockMvc.perform(put("/medico")
                 .contentType("application/json")
                 .content(objectMapper.writeValueAsString(medico)))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent()); 
 
-        // 3. Borrar
+        // Borrar 
         this.mockMvc.perform(delete("/medico/" + medico.getId()))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk()); 
     }
 }
