@@ -50,6 +50,15 @@ jobs:
         with:
           generate-branches-badge: true
           jacoco-csv-file: target/site/jacoco/jacoco.csv
+          
+      - name: Commit y Push del badge de Jacoco
+        if: github.event_name != 'pull_request'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .github/badges/*.svg
+          git commit -m "Autodocumentación: Actualizar badge de cobertura" || exit 0
+          git push
 
       - name: Log de Cobertura
         run: echo "Cobertura lograda ${{ steps.jacoco.outputs.coverage }}"
