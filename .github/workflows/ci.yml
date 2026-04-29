@@ -1,10 +1,10 @@
 name: CI Hospital Management
 
-on: [push, pull_request] # Se ejecuta en push y pull request 
+on: [push, pull_request]
 
 permissions:
-  contents: write  # Necesario para subir el badge dinámico 
-  checks: write    # Necesario para el informe de resultados 
+  contents: write  # Para subir el badge dinámico de Jacoco
+  checks: write    # Para que el reporte de tests funcione
   pull-requests: write
 
 jobs:
@@ -23,34 +23,34 @@ jobs:
           cache: 'maven'
 
       - name: Dar permisos al Wrapper
-        run: chmod +x mvnw # Requisito explícito del enunciado 
+        run: chmod +x mvnw
 
-      - name: Compile proyecto
-        run: ./mvnw compile --no-transfer-progress # Requisito del enunciado 
+      - name: Compilar proyecto
+        run: ./mvnw compile --no-transfer-progress
 
-      - name: Ejecutar Tests de Integracion
-        # Ejecuta verify y genera el reporte para Jacoco 
+      - name: Ejecutar Tests e Informe Jacoco
+        # Ejecutamos verify para los tests de integración y generamos el reporte
         run: ./mvnw verify jacoco:report --no-transfer-progress --batch-mode
 
       - name: Generar Informe de Resultados (Reporter)
-        if: always() # Para que el reporte aparezca aunque fallen los tests 
-        uses: dorny/test-reporter@v1 
+        if: always() # Se ejecuta siempre para ver qué falló
+        uses: dorny/test-reporter@v1
         with:
           name: Informe de Pruebas de Integracion
           path: 'target/failsafe-reports/*.xml'
           reporter: java-junit
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Generar Badge de Cobertura (Jacoco)
-        if: always() && github.event_name != 'pull_request'
-        id: jacoco
-        uses: cicirello/jacoco-badge-generator@v2 
+        if: github.event_name != 'pull_request'
+        uses: cicirello/jacoco-badge-generator@v2
         with:
           generate-branches-badge: true
           jacoco-csv-file: target/site/jacoco/jacoco.csv
           badges-directory: .github/badges
 
       - name: Commit y Push del badge dinamico
-        if: always() && github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request'
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
