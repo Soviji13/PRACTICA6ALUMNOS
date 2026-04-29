@@ -3,8 +3,8 @@ name: CI Hospital Management
 on: [push, pull_request]
 
 permissions:
-  contents: write
-  checks: write
+  contents: write  # Permiso para subir el badge dinámico
+  checks: write    # Permiso para el informe de resultados
   pull-requests: write
 
 jobs:
@@ -29,9 +29,10 @@ jobs:
         run: ./mvnw compile --no-transfer-progress
 
       - name: Ejecutar Tests de Integracion
-        run: ./mvnw verify --no-transfer-progress
+        # 'verify' es el comando para los tests de integración
+        run: ./mvnw verify jacoco:report --no-transfer-progress --batch-mode
 
-      - name: Generar Informe de Resultados
+      - name: Generar Informe de Resultados (Reporter)
         if: always() 
         uses: dorny/test-reporter@v1
         with:
@@ -40,18 +41,20 @@ jobs:
           reporter: java-junit
 
       - name: Generar Badge de Cobertura (Jacoco)
+        # Solo se genera en push a la rama principal
         if: github.event_name != 'pull_request'
+        id: jacoco
         uses: cicirello/jacoco-badge-generator@v2
         with:
           generate-branches-badge: true
           jacoco-csv-file: target/site/jacoco/jacoco.csv
           badges-directory: .github/badges
 
-      - name: Commit y Push del badge
+      - name: Commit y Push del badge dinámico
         if: github.event_name != 'pull_request'
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add .github/badges/*.svg
-          git commit -m "Autodocumentacion: Actualizar badge de Jacoco" || exit 0
+          git commit -m "Autodocumentacion: Actualizar badge de cobertura" || exit 0
           git push
