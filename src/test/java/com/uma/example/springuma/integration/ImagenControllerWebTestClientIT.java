@@ -90,4 +90,21 @@ public class ImagenControllerWebTestClientIT extends AbstractIntegration {
         }
     }
 
-   }
+    @Test
+    @DisplayName("Subir imagen y realizar prediccion de cancer")
+    void subirImagenYPredecir() {
+        // 1. Subimos la imagen usando el método auxiliar que ya tenías
+        subirImagen("healthy.png");
+
+        // 2. Pedimos la predicción al endpoint de IA
+        testClient.get().uri("/imagen/predict/" + 1L) 
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(String.class)
+                .value(resultado -> {
+                    // Verificamos que el resultado sea uno de los esperados
+                    assertTrue(resultado.contains("cancer") || resultado.contains("No cancer"));
+                });
+    }
+
+}

@@ -1,0 +1,50 @@
+name: CI Hospital Management
+
+on: [push, pull_request]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Descargar codigo
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'                # Cacheamos dependencias para ir más rápido 
+
+      - name: Dar permisos al Wrapper
+        run: chmod +x mvnw
+
+      - name: Ejecutar Tests e Informe Jacoco
+        # Un solo comando para compilar, probar y generar métricas
+        run: ./mvnw verify jacoco:report --no-transfer-progress --batch-mode
+
+      - name: Reporte de resultados (Tests)
+        if: always() # Se ejecuta aunque fallen los tests 
+        uses: phoenix-actions/test-reporting@v15
+        with:
+          name: Informe de Tests de Integracion
+          path: target/surefire-reports/*.xml
+          reporter: java-junit
+
+      - name: Subir informe de cobertura (Artifact)
+        if: always()
+        uses: actions/upload-artifact@v4 
+        with:
+          name: informe-cobertura-jacoco
+          path: target/site/jacoco/
+          
+      - name: Generar Badge de Jacoco
+        id: jacoco
+        uses: cicirello/jacoco-badge-generator@v2
+        with:
+          generate-branches-badge: true
+          jacoco-csv-file: target/site/jacoco/jacoco.csv
+
+      - name: Log de Cobertura
+        run: echo "Cobertura lograda ${{ steps.jacoco.outputs.coverage }}"

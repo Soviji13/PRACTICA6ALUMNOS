@@ -78,8 +78,10 @@ public class PacienteControllerMockMvcIT extends AbstractIntegration {
         crearMedico(medico);
         crearPaciente(paciente);
 
-        //Obtener paciente por ID
-        
+        // Obtener paciente por ID y verificar que el nombre coincide
+        mockMvc.perform(get("/paciente/" + paciente.getId()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.nombre").value("Maria"));
     }
 
 }
