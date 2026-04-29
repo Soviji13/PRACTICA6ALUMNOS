@@ -1,61 +1,53 @@
 name: CI Hospital Management
 
-on: [push, pull_request] 
+on: [push, pull_request]
 
 permissions:
-  contents: write  # Necesario para que la Action haga 'push' del badge de Jacoco
-  checks: write    # Necesario para el reporte de tests (GitHub-test-reporter) 
+  contents: write
+  checks: write
   pull-requests: write
 
 jobs:
   build-and-test:
-    runs-on: ubuntu-latest 
+    runs-on: ubuntu-latest
     
     steps:
       - name: Descargar codigo
-        uses: actions/checkout@v4 
+        uses: actions/checkout@v4
 
       - name: Configurar Java 21
-        uses: actions/setup-java@v4 
+        uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
-          cache: 'maven' 
+          cache: 'maven'
 
       - name: Dar permisos al Wrapper
-        run: chmod +x mvnw 
+        run: chmod +x mvnw
 
       - name: Compilar proyecto
         run: ./mvnw compile --no-transfer-progress
 
       - name: Ejecutar Tests de Integracion
-        # Generamos el reporte de Jacoco en el mismo paso para asegurar los datos 
-        run: ./mvnw verify jacoco:report --no-transfer-progress --batch-mode
+        run: ./mvnw verify --no-transfer-progress
 
-      - name: Generar Informe de Resultados (Reporter)
-        if: always() # Se ejecuta aunque fallen los tests para dar feedback rápido 
+      - name: Generar Informe de Resultados
+        if: always() 
         uses: dorny/test-reporter@v1
         with:
           name: Informe de Pruebas de Integracion
           path: target/failsafe-reports/*.xml
           reporter: java-junit
 
-      - name: Subir Artifacts de los Informes
-        if: always()
-        uses: actions/upload-artifact@v4 
-        with:
-          name: reportes-completos
-          path: target/site/jacoco/
-
       - name: Generar Badge de Cobertura (Jacoco)
         if: github.event_name != 'pull_request'
-        uses: cicirello/jacoco-badge-generator@v2 
+        uses: cicirello/jacoco-badge-generator@v2
         with:
           generate-branches-badge: true
           jacoco-csv-file: target/site/jacoco/jacoco.csv
           badges-directory: .github/badges
 
-      - name: Commit y Push del badge dinámico
+      - name: Commit y Push del badge
         if: github.event_name != 'pull_request'
         run: |
           git config --local user.email "action@github.com"
